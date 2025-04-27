@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { read, utils, writeFile } from 'xlsx';
 import { Button } from '@/components/ui/button';
@@ -16,7 +17,8 @@ interface ValidationError {
   message: string;
 }
 
-const MARC_TAG_PATTERN = /^(\d{3})\$([a-z])$/i;
+// Updated pattern to accept repeating fields with _N suffix
+const MARC_TAG_PATTERN = /^(\d{3})\$([a-z])(?:_\d+)?$/i;
 const REQUIRED_FIELDS = ['245$a']; // Title is required
 const INVALID_CHARS = ['|', '^', '\\'];
 
@@ -75,6 +77,15 @@ const ExcelToMarc = () => {
     return validationErrors;
   };
 
+  const normalizeTagName = (header: string): { tag: string, subfield: string } => {
+    // Extract the base tag and subfield, ignoring any _N suffix
+    const match = header.match(/^(\d{3})\$([a-z])/i);
+    if (match) {
+      return { tag: match[1], subfield: match[2] };
+    }
+    return { tag: '', subfield: '' };
+  };
+
   const convertToMarc = (data: MarcData[]) => {
     const marcEntries = data.map(row => {
       const tags: { [key: string]: { indicators: string, subfields: string[] } } = {};
@@ -82,9 +93,8 @@ const ExcelToMarc = () => {
       Object.entries(row).forEach(([header, value]) => {
         if (!value) return;
         
-        const match = header.match(MARC_TAG_PATTERN);
-        if (match) {
-          const [, tag, subfield] = match;
+        const { tag, subfield } = normalizeTagName(header);
+        if (tag) {
           if (!tags[tag]) {
             let indicators = '##';
             if (tag === '100' || tag === '700') indicators = '1#';
