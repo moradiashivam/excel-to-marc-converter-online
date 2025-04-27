@@ -108,7 +108,7 @@ const ExcelToMarc = () => {
             let indicators = '\\\\'; // Default indicators
             
             // Special indicator handling
-            if (tag === '100') indicators = '\\'; // Changed from '1\' to '\' 
+            if (tag === '100') indicators = '\\\\'; // Explicitly set to '\\'
             else if (tag === '245') indicators = '\\0';
             
             tags[tag] = { indicators, subfields: [] };
