@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { read, utils, writeFile } from 'xlsx';
 import { Button } from '@/components/ui/button';
@@ -107,7 +108,7 @@ const ExcelToMarc = () => {
             let indicators = '\\\\'; // Default indicators
             
             // Special indicator handling
-            if (tag === '100') indicators = '1\\';
+            if (tag === '100') indicators = '\\'; // Changed from '1\' to '\' 
             else if (tag === '245') indicators = '\\0';
             
             tags[tag] = { indicators, subfields: [] };
@@ -360,3 +361,4 @@ const ExcelToMarc = () => {
 };
 
 export default ExcelToMarc;
+
