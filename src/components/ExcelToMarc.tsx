@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { read, utils, writeFile } from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,12 +25,12 @@ const ExcelToMarc = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState<string>('');
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const validateData = (data: MarcData[]): ValidationError[] => {
     const validationErrors: ValidationError[] = [];
     
     data.forEach((row, index) => {
-      // Check for required fields
       REQUIRED_FIELDS.forEach(field => {
         if (!row[field]) {
           validationErrors.push({
@@ -41,7 +40,6 @@ const ExcelToMarc = () => {
         }
       });
       
-      // Check for invalid characters
       Object.entries(row).forEach(([field, value]) => {
         if (value && INVALID_CHARS.some(char => value.includes(char))) {
           validationErrors.push({
@@ -59,7 +57,6 @@ const ExcelToMarc = () => {
     const marcEntries = data.map(row => {
       const tags: { [key: string]: { indicators: string, subfields: string[] } } = {};
       
-      // Group by MARC tag numbers
       Object.entries(row).forEach(([header, value]) => {
         if (!value) return;
         
@@ -67,7 +64,6 @@ const ExcelToMarc = () => {
         if (match) {
           const [, tag, subfield] = match;
           if (!tags[tag]) {
-            // Default indicators based on common MARC standards
             let indicators = '##';
             if (tag === '100' || tag === '700') indicators = '1#';
             else if (tag === '245') indicators = '14';
@@ -78,7 +74,6 @@ const ExcelToMarc = () => {
         }
       });
       
-      // Convert to MARC format
       return Object.entries(tags).map(([tag, { indicators, subfields }]) => {
         return `${tag}${indicators}${subfields.join('')}`;
       }).join('\n');
@@ -113,6 +108,10 @@ const ExcelToMarc = () => {
     }
   };
 
+  const handleBrowseClick = () => {
+    fileInputRef.current?.click();
+  };
+
   const processFile = async (file: File) => {
     setFileName(file.name);
     try {
@@ -121,7 +120,6 @@ const ExcelToMarc = () => {
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = utils.sheet_to_json(worksheet) as MarcData[];
       
-      // Validate data
       const validationErrors = validateData(jsonData);
       setErrors(validationErrors);
       
@@ -147,6 +145,7 @@ const ExcelToMarc = () => {
         description: "Please make sure your Excel file is properly formatted",
         variant: "destructive",
       });
+      console.error("File processing error:", error);
     }
   };
 
@@ -170,7 +169,6 @@ const ExcelToMarc = () => {
   };
 
   const downloadTemplate = () => {
-    // Create a sample template
     const ws = utils.json_to_sheet([
       {
         '020$a': '9780380001019',
@@ -215,6 +213,7 @@ const ExcelToMarc = () => {
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
+              onClick={handleBrowseClick}
             >
               <Upload className="w-12 h-12 mx-auto text-blue-500 mb-2" />
               <p className="text-gray-600 mb-2">Drag and drop your Excel file here</p>
@@ -225,12 +224,11 @@ const ExcelToMarc = () => {
                 accept=".xlsx,.xls,.csv"
                 onChange={handleFileUpload}
                 className="hidden"
+                ref={fileInputRef}
               />
-              <label htmlFor="file-upload">
-                <Button variant="outline" className="cursor-pointer">
-                  Browse Files
-                </Button>
-              </label>
+              <Button variant="outline" className="cursor-pointer">
+                Browse Files
+              </Button>
               {fileName && (
                 <p className="text-blue-600 mt-2 flex items-center justify-center gap-2">
                   <FileText className="w-4 h-4" />
