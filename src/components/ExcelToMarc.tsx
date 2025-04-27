@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { read, utils, writeFile } from 'xlsx';
 import { Button } from '@/components/ui/button';
@@ -21,6 +20,9 @@ interface ValidationError {
 const MARC_TAG_PATTERN = /^(\d{3})\$([a-z])(?:_\d+)?$/i;
 const REQUIRED_FIELDS = ['245$a']; // Title is required
 const INVALID_CHARS = ['|', '^', '\\'];
+
+const MARC_LEADER = '00000nam a2200000la 4500';
+const MARC_008_DEFAULT = `${new Date().toISOString().slice(2,8)}s99999|||||xx||||||||||||||||||und||`;
 
 const ExcelToMarc = () => {
   const [marcOutput, setMarcOutput] = useState<string>('');
@@ -88,6 +90,12 @@ const ExcelToMarc = () => {
 
   const convertToMarc = (data: MarcData[]) => {
     const marcEntries = data.map(row => {
+      const lines: string[] = [];
+      
+      // Add leader and 008 field
+      lines.push(`LDR ${MARC_LEADER}`);
+      lines.push(`008 ${MARC_008_DEFAULT}`);
+      
       const tags: { [key: string]: { indicators: string, subfields: string[] } } = {};
       
       Object.entries(row).forEach(([header, value]) => {
@@ -96,9 +104,11 @@ const ExcelToMarc = () => {
         const { tag, subfield } = normalizeTagName(header);
         if (tag) {
           if (!tags[tag]) {
-            let indicators = '##';
-            if (tag === '100' || tag === '700') indicators = '1#';
-            else if (tag === '245') indicators = '14';
+            let indicators = '\\\\'; // Default indicators
+            
+            // Special indicator handling
+            if (tag === '100') indicators = '1\\';
+            else if (tag === '245') indicators = '\\0';
             
             tags[tag] = { indicators, subfields: [] };
           }
@@ -106,9 +116,14 @@ const ExcelToMarc = () => {
         }
       });
       
-      return Object.entries(tags).map(([tag, { indicators, subfields }]) => {
-        return `${tag}${indicators}${subfields.join('')}`;
-      }).join('\n');
+      // Convert tags to MARC format
+      Object.entries(tags)
+        .sort(([a], [b]) => parseInt(a) - parseInt(b))
+        .forEach(([tag, { indicators, subfields }]) => {
+          lines.push(`${tag} ${indicators}${subfields.join('')}`);
+        });
+      
+      return lines.join('\n');
     });
     
     return marcEntries.join('\n\n');
