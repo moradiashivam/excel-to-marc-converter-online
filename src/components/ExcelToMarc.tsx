@@ -16,6 +16,7 @@ interface ValidationError {
   message: string;
 }
 
+const MARC_TAG_PATTERN = /^(\d{3})\$([a-z])$/i;
 const REQUIRED_FIELDS = ['245$a']; // Title is required
 const INVALID_CHARS = ['|', '^', '\\'];
 
@@ -27,28 +28,49 @@ const ExcelToMarc = () => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const validateHeaders = (headers: string[]): ValidationError[] => {
+    const errors: ValidationError[] = [];
+    
+    headers.forEach(header => {
+      if (!MARC_TAG_PATTERN.test(header)) {
+        errors.push({
+          row: 0, // Header row
+          message: `Invalid MARC tag format in header: "${header}". Expected format: XXXY where XXX is a 3-digit number and Y is a lowercase letter (e.g., 245$a)`
+        });
+      }
+    });
+    
+    return errors;
+  };
+
   const validateData = (data: MarcData[]): ValidationError[] => {
     const validationErrors: ValidationError[] = [];
     
-    data.forEach((row, index) => {
-      REQUIRED_FIELDS.forEach(field => {
-        if (!row[field]) {
-          validationErrors.push({
-            row: index + 1,
-            message: `Missing required field: ${field}`
-          });
-        }
+    const headers = Object.keys(data[0] || {});
+    const headerErrors = validateHeaders(headers);
+    validationErrors.push(...headerErrors);
+    
+    if (headerErrors.length === 0) {
+      data.forEach((row, index) => {
+        REQUIRED_FIELDS.forEach(field => {
+          if (!row[field]) {
+            validationErrors.push({
+              row: index + 1,
+              message: `Missing required field: ${field}`
+            });
+          }
+        });
+        
+        Object.entries(row).forEach(([field, value]) => {
+          if (typeof value === 'string' && INVALID_CHARS.some(char => value.includes(char))) {
+            validationErrors.push({
+              row: index + 1,
+              message: `Invalid character in ${field}: ${INVALID_CHARS.join(', ')} are not allowed`
+            });
+          }
+        });
       });
-      
-      Object.entries(row).forEach(([field, value]) => {
-        if (value && INVALID_CHARS.some(char => value.includes(char))) {
-          validationErrors.push({
-            row: index + 1,
-            message: `Invalid character in ${field}: ${INVALID_CHARS.join(', ')} are not allowed`
-          });
-        }
-      });
-    });
+    }
     
     return validationErrors;
   };
@@ -60,7 +82,7 @@ const ExcelToMarc = () => {
       Object.entries(row).forEach(([header, value]) => {
         if (!value) return;
         
-        const match = header.match(/^(\d+)\$([a-z])$/i);
+        const match = header.match(MARC_TAG_PATTERN);
         if (match) {
           const [, tag, subfield] = match;
           if (!tags[tag]) {
@@ -120,6 +142,15 @@ const ExcelToMarc = () => {
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = utils.sheet_to_json(worksheet) as MarcData[];
       
+      if (!jsonData.length) {
+        toast({
+          title: "Error processing file",
+          description: "The Excel file appears to be empty",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const validationErrors = validateData(jsonData);
       setErrors(validationErrors);
       
@@ -142,7 +173,7 @@ const ExcelToMarc = () => {
     } catch (error) {
       toast({
         title: "Error processing file",
-        description: "Please make sure your Excel file is properly formatted",
+        description: "Please make sure your Excel file is properly formatted with valid MARC tags as headers",
         variant: "destructive",
       });
       console.error("File processing error:", error);
