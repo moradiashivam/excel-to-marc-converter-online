@@ -1,29 +1,14 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { read, utils, writeFile } from 'xlsx';
+import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Download, Upload, FileText, FileX } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { cn } from '@/lib/utils';
-
-interface MarcData {
-  [key: string]: string;
-}
-
-interface ValidationError {
-  row: number;
-  message: string;
-}
-
-// Updated pattern to accept repeating fields with _N suffix
-const MARC_TAG_PATTERN = /^(\d{3})\$([a-z])(?:_\d+)?$/i;
-const REQUIRED_FIELDS = ['245$a']; // Title is required
-const INVALID_CHARS = ['|', '^', '\\'];
-
-const MARC_LEADER = '00000nam a2200000la 4500';
-const MARC_008_DEFAULT = `${new Date().toISOString().slice(2,8)}s99999|||||xx||||||||||||||||||und||`;
+import FileUploadZone from './FileUploadZone';
+import ValidationErrors from './ValidationErrors';
+import MarcPreview from './MarcPreview';
+import { validateData, type ValidationError, type MarcData } from '@/utils/marcValidation';
+import { convertToMarc } from '@/utils/marcConverter';
 
 const ExcelToMarc = () => {
   const [marcOutput, setMarcOutput] = useState<string>('');
@@ -31,134 +16,6 @@ const ExcelToMarc = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState<string>('');
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const validateHeaders = (headers: string[]): ValidationError[] => {
-    const errors: ValidationError[] = [];
-    
-    headers.forEach(header => {
-      if (!MARC_TAG_PATTERN.test(header)) {
-        errors.push({
-          row: 0, // Header row
-          message: `Invalid MARC tag format in header: "${header}". Expected format: XXXY where XXX is a 3-digit number and Y is a lowercase letter (e.g., 245$a)`
-        });
-      }
-    });
-    
-    return errors;
-  };
-
-  const validateData = (data: MarcData[]): ValidationError[] => {
-    const validationErrors: ValidationError[] = [];
-    
-    const headers = Object.keys(data[0] || {});
-    const headerErrors = validateHeaders(headers);
-    validationErrors.push(...headerErrors);
-    
-    if (headerErrors.length === 0) {
-      data.forEach((row, index) => {
-        REQUIRED_FIELDS.forEach(field => {
-          if (!row[field]) {
-            validationErrors.push({
-              row: index + 1,
-              message: `Missing required field: ${field}`
-            });
-          }
-        });
-        
-        Object.entries(row).forEach(([field, value]) => {
-          if (typeof value === 'string' && INVALID_CHARS.some(char => value.includes(char))) {
-            validationErrors.push({
-              row: index + 1,
-              message: `Invalid character in ${field}: ${INVALID_CHARS.join(', ')} are not allowed`
-            });
-          }
-        });
-      });
-    }
-    
-    return validationErrors;
-  };
-
-  const normalizeTagName = (header: string): { tag: string, subfield: string } => {
-    // Extract the base tag and subfield, ignoring any _N suffix
-    const match = header.match(/^(\d{3})\$([a-z])/i);
-    if (match) {
-      return { tag: match[1], subfield: match[2] };
-    }
-    return { tag: '', subfield: '' };
-  };
-
-  const convertToMarc = (data: MarcData[]) => {
-    const marcEntries = data.map(row => {
-      const lines: string[] = [];
-      
-      // Add leader and 008 field
-      lines.push(`LDR ${MARC_LEADER}`);
-      lines.push(`008 ${MARC_008_DEFAULT}`);
-      
-      const tags: { [key: string]: { indicators: string, subfields: string[] } } = {};
-      
-      Object.entries(row).forEach(([header, value]) => {
-        if (!value) return;
-        
-        const { tag, subfield } = normalizeTagName(header);
-        if (tag) {
-          if (!tags[tag]) {
-            let indicators = '\\\\'; // Default indicators
-            
-            // Special indicator handling
-            if (tag === '100') indicators = '\\\\'; // Explicitly set to '\\'
-            else if (tag === '245') indicators = '\\0';
-            
-            tags[tag] = { indicators, subfields: [] };
-          }
-          tags[tag].subfields.push(`$${subfield}${value}`);
-        }
-      });
-      
-      // Convert tags to MARC format
-      Object.entries(tags)
-        .sort(([a], [b]) => parseInt(a) - parseInt(b))
-        .forEach(([tag, { indicators, subfields }]) => {
-          lines.push(`${tag} ${indicators}${subfields.join('')}`);
-        });
-      
-      return lines.join('\n');
-    });
-    
-    return marcEntries.join('\n\n');
-  };
-
-  const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    setIsDragging(false);
-    
-    const files = event.dataTransfer.files;
-    if (files.length) {
-      await processFile(files[0]);
-    }
-  };
-
-  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      await processFile(file);
-    }
-  };
-
-  const handleBrowseClick = () => {
-    fileInputRef.current?.click();
-  };
 
   const processFile = async (file: File) => {
     setFileName(file.name);
@@ -262,37 +119,12 @@ const ExcelToMarc = () => {
               Your Excel file should have column headers in MARC format (e.g., "100$a", "245$b")
             </p>
             
-            <div
-              className={cn(
-                "border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors",
-                isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-blue-400"
-              )}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              onClick={handleBrowseClick}
-            >
-              <Upload className="w-12 h-12 mx-auto text-blue-500 mb-2" />
-              <p className="text-gray-600 mb-2">Drag and drop your Excel file here</p>
-              <p className="text-gray-400 text-sm mb-4">or</p>
-              <Input
-                id="file-upload"
-                type="file"
-                accept=".xlsx,.xls,.csv"
-                onChange={handleFileUpload}
-                className="hidden"
-                ref={fileInputRef}
-              />
-              <Button variant="outline" className="cursor-pointer">
-                Browse Files
-              </Button>
-              {fileName && (
-                <p className="text-blue-600 mt-2 flex items-center justify-center gap-2">
-                  <FileText className="w-4 h-4" />
-                  {fileName}
-                </p>
-              )}
-            </div>
+            <FileUploadZone
+              onFileUpload={processFile}
+              isDragging={isDragging}
+              setIsDragging={setIsDragging}
+              fileName={fileName}
+            />
             
             <div className="mt-4 flex justify-between items-center">
               <Button
@@ -306,42 +138,14 @@ const ExcelToMarc = () => {
             </div>
           </div>
 
-          {errors.length > 0 && (
-            <div className="mb-6">
-              <Alert variant="destructive">
-                <FileX className="h-4 w-4" />
-                <AlertTitle>Validation Errors</AlertTitle>
-                <AlertDescription>
-                  <ul className="list-disc list-inside mt-2">
-                    {errors.slice(0, 5).map((error, index) => (
-                      <li key={index}>Row {error.row}: {error.message}</li>
-                    ))}
-                    {errors.length > 5 && (
-                      <li>...and {errors.length - 5} more errors</li>
-                    )}
-                  </ul>
-                </AlertDescription>
-              </Alert>
-            </div>
-          )}
+          {errors.length > 0 && <ValidationErrors errors={errors} />}
 
           {marcOutput && (
-            <div className="mt-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-800">MARC Output Preview</h3>
-                <Button
-                  onClick={handleDownload}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                  disabled={errors.length > 0}
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download MARC
-                </Button>
-              </div>
-              <pre className="bg-gray-50 p-4 rounded-md overflow-x-auto whitespace-pre-wrap text-sm text-gray-800 max-h-72 overflow-y-auto">
-                {marcOutput}
-              </pre>
-            </div>
+            <MarcPreview
+              marcOutput={marcOutput}
+              onDownload={handleDownload}
+              hasErrors={errors.length > 0}
+            />
           )}
         </div>
 
@@ -361,4 +165,3 @@ const ExcelToMarc = () => {
 };
 
 export default ExcelToMarc;
-
