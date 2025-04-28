@@ -9,7 +9,7 @@
 
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
-
+    
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
@@ -31,24 +31,21 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
-
     --radius: 0.5rem;
 
+    /* Sidebar */
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Modern additions */
+    --selection: 217.2 91.2% 59.8% / 0.2;
+    --highlight: 217.2 91.2% 59.8% / 0.1;
   }
 
   .dark {
@@ -57,7 +54,7 @@
 
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-
+    
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
@@ -79,6 +76,8 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+
+    /* Sidebar */
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -87,15 +86,64 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-}
 
-@layer base {
+    /* Modern additions */
+    --selection: 224.3 76.3% 48% / 0.3;
+    --highlight: 224.3 76.3% 48% / 0.15;
+  }
+
+  /* Base styles */
   * {
     @apply border-border;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  ::selection {
+    @apply bg-selection;
   }
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Scrollbar styles */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-background;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-border hover:bg-muted-foreground/30;
+  }
+
+  /* Smooth transitions for theme changes */
+  @media (prefers-reduced-motion: no-preference) {
+    :root, .dark {
+      transition: color 300ms, background-color 300ms;
+    }
+  }
+}
+
+@layer utilities {
+  .highlight {
+    @apply bg-highlight;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .backface-hidden {
+    backface-visibility: hidden;
   }
 }
