@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { read, utils, writeFile } from 'xlsx';
 import { Download } from 'lucide-react';
@@ -11,7 +10,6 @@ import ValidationErrors from './ValidationErrors';
 import MarcPreview from './MarcPreview';
 import { validateData, type ValidationError, type MarcData } from '@/utils/marcValidation';
 import { convertToMarc } from '@/utils/marcConverter';
-
 const ExcelToMarc = () => {
   const [marcOutput, setMarcOutput] = useState<string>('');
   const [errors, setErrors] = useState<ValidationError[]>([]);
@@ -19,8 +17,9 @@ const ExcelToMarc = () => {
   const [fileName, setFileName] = useState<string>('');
   const [skipRows, setSkipRows] = useState<number>(0);
   const [outputFormat, setOutputFormat] = useState<'txt' | 'mrk'>('txt');
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const processFile = async (file: File) => {
     setFileName(file.name);
     try {
@@ -28,54 +27,49 @@ const ExcelToMarc = () => {
       const workbook = read(data);
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       let jsonData = utils.sheet_to_json(worksheet) as MarcData[];
-      
+
       // Skip the specified number of rows
       if (skipRows > 0) {
         jsonData = jsonData.slice(skipRows);
       }
-      
       if (!jsonData.length) {
         toast({
           title: "Error processing file",
           description: "The Excel file appears to be empty after skipping rows",
-          variant: "destructive",
+          variant: "destructive"
         });
         return;
       }
-
       const validationErrors = validateData(jsonData);
       setErrors(validationErrors);
-      
       if (validationErrors.length > 0) {
         toast({
           title: "Validation errors found",
           description: `${validationErrors.length} issues detected in your data`,
-          variant: "destructive",
+          variant: "destructive"
         });
         return;
       }
-
       const marcText = convertToMarc(jsonData);
       setMarcOutput(marcText);
-      
       toast({
         title: "Excel file processed successfully",
-        description: "Your MARC data is ready for preview and download",
+        description: "Your MARC data is ready for preview and download"
       });
     } catch (error) {
       toast({
         title: "Error processing file",
         description: "Please make sure your Excel file is properly formatted with valid MARC tags as headers",
-        variant: "destructive",
+        variant: "destructive"
       });
       console.error("File processing error:", error);
     }
   };
-
   const handleDownload = () => {
     if (!marcOutput) return;
-    
-    const blob = new Blob([marcOutput], { type: 'text/plain' });
+    const blob = new Blob([marcOutput], {
+      type: 'text/plain'
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -85,40 +79,32 @@ const ExcelToMarc = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
     toast({
       title: "Download started",
-      description: `Your MARC file is being downloaded as .${extension}`,
+      description: `Your MARC file is being downloaded as .${extension}`
     });
   };
-
   const downloadTemplate = () => {
-    const ws = utils.json_to_sheet([
-      {
-        '020$a': '9780380001019',
-        '020$c': '119.14USD',
-        '040$a': 'OCLC',
-        '100$a': 'Asimov, Isaac',
-        '100$d': '1920-1992',
-        '245$a': 'The Foundation trilogy :',
-        '245$b': 'three classics of Science Fiction.',
-        '245$c': 'Asimov, Isaac 1920-1992',
-        '650$a': 'Science fiction.'
-      }
-    ]);
-    
+    const ws = utils.json_to_sheet([{
+      '020$a': '9780380001019',
+      '020$c': '119.14USD',
+      '040$a': 'OCLC',
+      '100$a': 'Asimov, Isaac',
+      '100$d': '1920-1992',
+      '245$a': 'The Foundation trilogy :',
+      '245$b': 'three classics of Science Fiction.',
+      '245$c': 'Asimov, Isaac 1920-1992',
+      '650$a': 'Science fiction.'
+    }]);
     const wb = utils.book_new();
     utils.book_append_sheet(wb, ws, "Sample");
     writeFile(wb, "marc_template.xlsx");
-    
     toast({
       title: "Template downloaded",
-      description: "Use this file as a guide for your data structure",
+      description: "Use this file as a guide for your data structure"
     });
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4 md:p-8">
+  return <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-blue-900 mb-6">Excel to MARC Converter</h1>
         
@@ -134,15 +120,7 @@ const ExcelToMarc = () => {
                 <label htmlFor="skipRows" className="block text-sm font-medium text-gray-700 mb-1">
                   Skip Rows
                 </label>
-                <Input
-                  id="skipRows"
-                  type="number"
-                  min="0"
-                  value={skipRows}
-                  onChange={(e) => setSkipRows(Math.max(0, parseInt(e.target.value) || 0))}
-                  placeholder="Number of rows to skip"
-                  className="w-full"
-                />
+                <Input id="skipRows" type="number" min="0" value={skipRows} onChange={e => setSkipRows(Math.max(0, parseInt(e.target.value) || 0))} placeholder="Number of rows to skip" className="w-full" />
               </div>
               <div>
                 <label htmlFor="outputFormat" className="block text-sm font-medium text-gray-700 mb-1">
@@ -160,34 +138,16 @@ const ExcelToMarc = () => {
               </div>
             </div>
             
-            <FileUploadZone
-              onFileUpload={processFile}
-              isDragging={isDragging}
-              setIsDragging={setIsDragging}
-              fileName={fileName}
-            />
+            <FileUploadZone onFileUpload={processFile} isDragging={isDragging} setIsDragging={setIsDragging} fileName={fileName} />
             
             <div className="mt-4 flex justify-between items-center">
-              <Button
-                onClick={downloadTemplate}
-                variant="outline"
-                className="text-blue-600 border-blue-600"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download Template
-              </Button>
+              
             </div>
           </div>
 
           {errors.length > 0 && <ValidationErrors errors={errors} />}
 
-          {marcOutput && (
-            <MarcPreview
-              marcOutput={marcOutput}
-              onDownload={handleDownload}
-              hasErrors={errors.length > 0}
-            />
-          )}
+          {marcOutput && <MarcPreview marcOutput={marcOutput} onDownload={handleDownload} hasErrors={errors.length > 0} />}
         </div>
 
         <div className="bg-blue-50 rounded-lg p-6">
@@ -202,8 +162,6 @@ const ExcelToMarc = () => {
           </ul>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default ExcelToMarc;
