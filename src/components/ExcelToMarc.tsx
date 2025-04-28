@@ -5,6 +5,17 @@ import { Button } from '@/components/ui/button';
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useNavigate } from 'react-router-dom';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import FileUploadZone from './FileUploadZone';
 import ValidationErrors from './ValidationErrors';
 import MarcPreview from './MarcPreview';
@@ -18,9 +29,9 @@ const ExcelToMarc = () => {
   const [fileName, setFileName] = useState<string>('');
   const [skipRows, setSkipRows] = useState<number>(0);
   const [outputFormat, setOutputFormat] = useState<'txt' | 'mrk'>('txt');
-  const {
-    toast
-  } = useToast();
+  const [showTemplateDialog, setShowTemplateDialog] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const processFile = async (file: File) => {
     setFileName(file.name);
@@ -108,13 +119,23 @@ const ExcelToMarc = () => {
     });
   };
 
-  const openTemplateFile = () => {
+  const openTemplateDialog = () => {
+    setShowTemplateDialog(true);
+  };
+
+  const handleTemplateDownload = () => {
+    setShowTemplateDialog(false);
     window.open('https://docs.google.com/spreadsheets/d/1eFPqeOAU4Vl1JlqViuzh0Xu5dRxt-eX7/edit?usp=sharing&ouid=107215207810054417851&rtpof=true&sd=true', '_blank');
     toast({
       title: "Template Download",
       description: "Please remember to remove all red-colored dummy data before uploading your actual data.",
       variant: "destructive"
     });
+  };
+
+  const handleCancelTemplate = () => {
+    setShowTemplateDialog(false);
+    navigate('/');
   };
 
   return <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 p-4 md:p-8">
@@ -156,13 +177,28 @@ const ExcelToMarc = () => {
             <div className="mt-4 flex justify-between items-center">
               <Button
                 variant="outline"
-                onClick={openTemplateFile}
+                onClick={openTemplateDialog}
                 className="flex items-center gap-2"
               >
                 <FileSpreadsheet className="h-4 w-4" />
                 Download Template
               </Button>
             </div>
+
+            <AlertDialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Download Template</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    You are about to download a template file. Please remember to remove all red-colored dummy data before uploading your actual data. Would you like to proceed?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={handleCancelTemplate}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleTemplateDownload}>Continue</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
 
           {errors.length > 0 && <ValidationErrors errors={errors} />}
