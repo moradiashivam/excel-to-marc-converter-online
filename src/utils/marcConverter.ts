@@ -27,8 +27,9 @@ export const convertToMarc = (data: MarcData[]) => {
         if (!tags[tag]) {
           let indicators = '\\\\';
           
+          // Changed indicator for tag 245 from '\0' to '\\'
           if (tag === '100') indicators = '\\\\';
-          else if (tag === '245') indicators = '\\0';
+          else if (tag === '245') indicators = '\\\\';
           
           tags[tag] = { indicators, subfields: [] };
         }
