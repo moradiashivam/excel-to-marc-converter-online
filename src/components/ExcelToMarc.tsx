@@ -4,6 +4,8 @@ import { read, utils, writeFile } from 'xlsx';
 import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import FileUploadZone from './FileUploadZone';
 import ValidationErrors from './ValidationErrors';
 import MarcPreview from './MarcPreview';
@@ -15,6 +17,8 @@ const ExcelToMarc = () => {
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState<string>('');
+  const [skipRows, setSkipRows] = useState<number>(0);
+  const [outputFormat, setOutputFormat] = useState<'txt' | 'mrk'>('txt');
   const { toast } = useToast();
 
   const processFile = async (file: File) => {
@@ -23,12 +27,17 @@ const ExcelToMarc = () => {
       const data = await file.arrayBuffer();
       const workbook = read(data);
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = utils.sheet_to_json(worksheet) as MarcData[];
+      let jsonData = utils.sheet_to_json(worksheet) as MarcData[];
+      
+      // Skip the specified number of rows
+      if (skipRows > 0) {
+        jsonData = jsonData.slice(skipRows);
+      }
       
       if (!jsonData.length) {
         toast({
           title: "Error processing file",
-          description: "The Excel file appears to be empty",
+          description: "The Excel file appears to be empty after skipping rows",
           variant: "destructive",
         });
         return;
@@ -70,7 +79,8 @@ const ExcelToMarc = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = fileName ? `${fileName.split('.')[0]}_marc.txt` : 'marc_output.txt';
+    const extension = outputFormat === 'mrk' ? 'mrk' : 'txt';
+    a.download = fileName ? `${fileName.split('.')[0]}.${extension}` : `marc_output.${extension}`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -78,7 +88,7 @@ const ExcelToMarc = () => {
     
     toast({
       title: "Download started",
-      description: "Your MARC file is being downloaded",
+      description: `Your MARC file is being downloaded as .${extension}`,
     });
   };
 
@@ -119,6 +129,37 @@ const ExcelToMarc = () => {
               Your Excel file should have column headers in MARC format (e.g., "100$a", "245$b")
             </p>
             
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label htmlFor="skipRows" className="block text-sm font-medium text-gray-700 mb-1">
+                  Skip Rows
+                </label>
+                <Input
+                  id="skipRows"
+                  type="number"
+                  min="0"
+                  value={skipRows}
+                  onChange={(e) => setSkipRows(Math.max(0, parseInt(e.target.value) || 0))}
+                  placeholder="Number of rows to skip"
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <label htmlFor="outputFormat" className="block text-sm font-medium text-gray-700 mb-1">
+                  Output Format
+                </label>
+                <Select value={outputFormat} onValueChange={(value: 'txt' | 'mrk') => setOutputFormat(value)}>
+                  <SelectTrigger id="outputFormat">
+                    <SelectValue placeholder="Select format" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="txt">.txt</SelectItem>
+                    <SelectItem value="mrk">.mrk</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
             <FileUploadZone
               onFileUpload={processFile}
               isDragging={isDragging}
@@ -157,6 +198,7 @@ const ExcelToMarc = () => {
             <li>Avoid special characters like |, ^, or \</li>
             <li>Multiple subfields for the same tag will be automatically combined</li>
             <li>For repeatable fields (like multiple 650 entries), create separate rows</li>
+            <li>Use the "Skip Rows" option to ignore header rows or other content at the start of your Excel file</li>
           </ul>
         </div>
       </div>
