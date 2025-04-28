@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -100,7 +101,7 @@
   }
 
   ::selection {
-    @apply bg-selection;
+    background-color: hsl(var(--selection));
   }
 
   body {
