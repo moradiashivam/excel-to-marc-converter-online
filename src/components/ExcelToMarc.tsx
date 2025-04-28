@@ -113,7 +113,7 @@ const ExcelToMarc = () => {
     toast({
       title: "Template Download",
       description: "Please remember to remove all red-colored dummy data before uploading your actual data.",
-      variant: "warning",
+      variant: "destructive"
     });
   };
 
