@@ -14,8 +14,8 @@ export const convertToMarc = (data: MarcData[]) => {
   const marcEntries = data.map(row => {
     const lines: string[] = [];
     
-    lines.push(`LDR ${MARC_LEADER}`);
-    lines.push(`008 ${MARC_008_DEFAULT}`);
+    lines.push(`=LDR ${MARC_LEADER}`);
+    lines.push(`=008 ${MARC_008_DEFAULT}`);
     
     const tags: { [key: string]: { indicators: string, subfields: string[] } } = {};
     
@@ -27,7 +27,7 @@ export const convertToMarc = (data: MarcData[]) => {
         if (!tags[tag]) {
           let indicators = '\\\\';
           
-          // Changed indicator for tag 245 from '\0' to '\\'
+          // Use standard indicator values
           if (tag === '100') indicators = '\\\\';
           else if (tag === '245') indicators = '\\\\';
           
@@ -40,7 +40,7 @@ export const convertToMarc = (data: MarcData[]) => {
     Object.entries(tags)
       .sort(([a], [b]) => parseInt(a) - parseInt(b))
       .forEach(([tag, { indicators, subfields }]) => {
-        lines.push(`${tag} ${indicators}${subfields.join('')}`);
+        lines.push(`=${tag} ${indicators}${subfields.join('')}`);
       });
     
     return lines.join('\n');

@@ -25,7 +25,7 @@ const MarcPreview = ({ marcOutput, onDownload, hasErrors }: MarcPreviewProps) =>
           Download MARC
         </Button>
       </div>
-      <pre className="bg-gray-50 p-4 rounded-md overflow-x-auto whitespace-pre-wrap text-sm text-gray-800 max-h-72 overflow-y-auto">
+      <pre className="bg-gray-50 p-4 rounded-md overflow-x-auto whitespace-pre-wrap text-sm text-gray-800 max-h-72 overflow-y-auto font-mono">
         {marcOutput}
       </pre>
     </div>
