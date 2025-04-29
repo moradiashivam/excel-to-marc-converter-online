@@ -15,7 +15,7 @@ const MarcPreview = ({ marcOutput, onDownload, hasErrors }: MarcPreviewProps) =>
   return (
     <div className="mt-6">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-800">MARC Output Preview</h3>
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">MARC Output Preview</h3>
         <Button
           onClick={onDownload}
           className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -25,7 +25,7 @@ const MarcPreview = ({ marcOutput, onDownload, hasErrors }: MarcPreviewProps) =>
           Download MARC
         </Button>
       </div>
-      <pre className="bg-gray-50 p-4 rounded-md overflow-x-auto whitespace-pre-wrap text-sm text-gray-800 max-h-72 overflow-y-auto font-mono">
+      <pre className="bg-white/90 dark:bg-gray-800/90 p-4 rounded-md overflow-x-auto whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200 max-h-72 overflow-y-auto font-mono backdrop-blur-sm">
         {marcOutput}
       </pre>
     </div>

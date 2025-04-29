@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import Pattern from "./components/Pattern";
 
 const queryClient = new QueryClient();
 
@@ -15,6 +16,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class">
         <TooltipProvider>
+          <Pattern />
           <Toaster />
           <Sonner />
           <BrowserRouter>
