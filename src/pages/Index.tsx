@@ -1,5 +1,5 @@
 
-import ExcelToMarc from '@/components/ExcelToMarc';
+import ExcelToMarc from '@/components/excel-to-marc/ExcelToMarc';
 import Footer from '@/components/Footer';
 import ThemeToggle from '@/components/ThemeToggle';
 
