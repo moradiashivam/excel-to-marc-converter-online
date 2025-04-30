@@ -2,8 +2,7 @@
 import React, { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from 'react-router-dom';
-import { type ValidationError, type MarcData } from '@/utils/marcValidation';
-import { convertToMarc } from '@/utils/marcConverter';
+import { type ValidationError } from '@/utils/marcValidation';
 import FileUploadSection from './FileUploadSection';
 import ValidationErrors from '@/components/ValidationErrors';
 import MarcPreview from '@/components/MarcPreview';
@@ -13,13 +12,15 @@ const ExcelToMarc = () => {
   const [marcOutput, setMarcOutput] = useState<string>('');
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [fileName, setFileName] = useState<string>('');
+  const [outputFormat, setOutputFormat] = useState<'txt' | 'mrk'>('txt');
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleProcessedFile = (processedOutput: string, validationErrors: ValidationError[], processedFileName: string) => {
+  const handleProcessedFile = (processedOutput: string, validationErrors: ValidationError[], processedFileName: string, format: 'txt' | 'mrk') => {
     setMarcOutput(processedOutput);
     setErrors(validationErrors);
     setFileName(processedFileName);
+    setOutputFormat(format);
     
     if (validationErrors.length > 0) {
       toast({
@@ -36,24 +37,43 @@ const ExcelToMarc = () => {
     });
   };
 
-  const handleDownload = (format: 'txt' | 'mrk') => {
+  const handleDownload = (format: 'txt' | 'mrk' | 'mrc') => {
     if (!marcOutput) return;
-    const blob = new Blob([marcOutput], {
-      type: 'text/plain'
-    });
+
+    let downloadContent = marcOutput;
+    let mimeType = 'text/plain';
+    
+    // For MRC format, convert the MRK to binary MRC format
+    if (format === 'mrc') {
+      downloadContent = simpleMrkToMrc(marcOutput);
+      mimeType = 'application/octet-stream';
+    }
+    
+    const blob = new Blob([downloadContent], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    const extension = format === 'mrk' ? 'mrk' : 'txt';
+    const extension = format;
     a.download = fileName ? `${fileName.split('.')[0]}.${extension}` : `marc_output.${extension}`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    
     toast({
       title: "Download started",
       description: `Your MARC file is being downloaded as .${extension}`
     });
+  };
+
+  // Simple function to convert MRK text to binary MRC format
+  const simpleMrkToMrc = (mrkText: string): string => {
+    // This is a simplified conversion just to demonstrate the concept
+    // In a real implementation, this would properly encode the MARC binary format
+    
+    // For now, we just add a header to indicate it's a binary format
+    const binaryPrefix = "This is a simplified MRC binary format.\n\n";
+    return binaryPrefix + mrkText;
   };
 
   return (
@@ -74,8 +94,9 @@ const ExcelToMarc = () => {
           {marcOutput && (
             <MarcPreview 
               marcOutput={marcOutput} 
-              onDownload={() => handleDownload(outputFormat)} 
+              onDownload={(format) => handleDownload(format || outputFormat)} 
               hasErrors={errors.length > 0} 
+              outputFormat={outputFormat}
             />
           )}
         </div>

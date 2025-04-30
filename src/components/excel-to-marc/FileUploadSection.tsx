@@ -20,7 +20,7 @@ import { validateData, type ValidationError, type MarcData } from '@/utils/marcV
 import { convertToMarc } from '@/utils/marcConverter';
 
 interface FileUploadSectionProps {
-  onFileProcessed: (marcOutput: string, errors: ValidationError[], fileName: string) => void;
+  onFileProcessed: (marcOutput: string, errors: ValidationError[], fileName: string, format: 'txt' | 'mrk') => void;
   fileName: string;
   navigate: any;
   toast: any;
@@ -55,9 +55,9 @@ const FileUploadSection = ({ onFileProcessed, fileName, navigate, toast }: FileU
       
       if (validationErrors.length === 0) {
         const marcText = convertToMarc(jsonData);
-        onFileProcessed(marcText, validationErrors, file.name);
+        onFileProcessed(marcText, validationErrors, file.name, outputFormat);
       } else {
-        onFileProcessed('', validationErrors, file.name);
+        onFileProcessed('', validationErrors, file.name, outputFormat);
       }
     } catch (error) {
       toast({
