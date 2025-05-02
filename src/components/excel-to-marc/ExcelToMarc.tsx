@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from 'react-router-dom';
@@ -78,11 +77,11 @@ const ExcelToMarc = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 p-4 md:p-8">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 dark:from-blue-400 dark:via-purple-300 dark:to-indigo-300">
+      <div className="max-w-5xl mx-auto bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg p-6 md:p-8 mb-8">
+        <h1 className="text-4xl md:text-5xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 dark:from-blue-300 dark:via-purple-200 dark:to-indigo-200">
           <span className="inline-flex items-center">
             <svg 
-              className="w-10 h-10 mr-3 text-blue-600 dark:text-blue-400 transition-transform hover:rotate-12" 
+              className="w-10 h-10 mr-3 text-blue-600 dark:text-blue-300 transition-transform hover:rotate-12" 
               xmlns="http://www.w3.org/2000/svg" 
               width="24" 
               height="24" 
@@ -101,13 +100,11 @@ const ExcelToMarc = () => {
             </svg>
             <span className="relative">
               Excel to MARC Converter
-              <span className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-blue-500/50 via-purple-500/50 to-indigo-500/50 dark:from-blue-400/50 dark:via-purple-400/50 dark:to-indigo-400/50 rounded-full"></span>
+              <span className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-blue-500/50 via-purple-500/50 to-indigo-500/50 dark:from-blue-300/70 dark:via-purple-300/70 dark:to-indigo-300/70 rounded-full"></span>
             </span>
           </span>
         </h1>
-      </div>
       
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 md:p-8 mb-8">
         <FileUploadSection 
           onFileProcessed={handleProcessedFile}
           fileName={fileName}
