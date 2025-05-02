@@ -2,8 +2,9 @@
 import React, { useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { FileX, Info, ChevronDown, ChevronUp, Check, Download } from 'lucide-react';
+import { FileX, Info, ChevronDown, ChevronUp, Check, Download, FileSpreadsheet } from 'lucide-react';
 import { ValidationError } from '@/utils/marcValidation';
+import { write, utils } from 'xlsx';
 
 interface ValidationErrorsProps {
   errors: ValidationError[];
@@ -19,8 +20,8 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
   const errorsByType: { [key: string]: ValidationError[] } = {};
   errors.forEach(error => {
     const errorType = error.message.includes('Missing') ? 'Missing Fields' : 
-                      error.message.includes('Invalid character') ? 'Invalid Characters' :
-                      error.message.includes('Invalid MARC') ? 'Format Issues' : 'Other Issues';
+                    error.message.includes('Invalid character') ? 'Invalid Characters' :
+                    error.message.includes('Invalid MARC') ? 'Format Issues' : 'Other Issues';
     
     if (!errorsByType[errorType]) {
       errorsByType[errorType] = [];
@@ -64,6 +65,60 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
     URL.revokeObjectURL(url);
   };
 
+  const downloadErrorsAsExcel = () => {
+    // Create worksheet data
+    const wsData = [
+      ['Row', 'Error Type', 'Error Message', 'Status']
+    ];
+
+    errors.forEach((error, index) => {
+      const errorType = error.message.includes('Missing') ? 'Missing Field' : 
+                        error.message.includes('Invalid character') ? 'Invalid Character' :
+                        error.message.includes('Invalid MARC') ? 'Format Issue' : 'Other Issue';
+                        
+      const message = error.message.replace(`Row ${error.row}: `, '');
+      const status = readErrors.includes(index) ? "Reviewed" : "Pending Review";
+      
+      wsData.push([error.row, errorType, message, status]);
+    });
+
+    // Create worksheet
+    const ws = utils.aoa_to_sheet(wsData);
+    
+    // Set column widths
+    const wscols = [
+      { wch: 8 },   // Row column
+      { wch: 20 },  // Error type column
+      { wch: 60 },  // Error message column
+      { wch: 15 }   // Status column
+    ];
+    ws['!cols'] = wscols;
+    
+    // Create workbook
+    const wb = utils.book_new();
+    utils.book_append_sheet(wb, ws, "Validation Errors");
+    
+    // Generate Excel file and download
+    const wbout = write(wb, { bookType: 'xlsx', type: 'binary' });
+    
+    // Convert to blob and download
+    const buf = new ArrayBuffer(wbout.length);
+    const view = new Uint8Array(buf);
+    for (let i = 0; i < wbout.length; i++) {
+      view[i] = wbout.charCodeAt(i) & 0xFF;
+    }
+    
+    const blob = new Blob([buf], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'marc_validation_errors.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <Alert variant="destructive" className="mb-6">
       <FileX className="h-5 w-5" />
@@ -84,7 +139,15 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
             className="h-8 text-xs flex items-center gap-1"
             onClick={downloadErrorList}
           >
-            <Download className="w-4 h-4" /> Download Errors
+            <Download className="w-4 h-4" /> Download as Text
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="h-8 text-xs flex items-center gap-1"
+            onClick={downloadErrorsAsExcel}
+          >
+            <FileSpreadsheet className="w-4 h-4" /> Download as Excel
           </Button>
         </div>
       </AlertTitle>
