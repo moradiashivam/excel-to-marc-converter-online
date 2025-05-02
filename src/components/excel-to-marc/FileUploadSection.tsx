@@ -89,21 +89,21 @@ const FileUploadSection = ({ onFileProcessed, fileName, navigate, toast }: FileU
   };
 
   return (
-    <div className="mb-6">
-      <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">Upload Excel File</h2>
-      <p className="text-gray-600 dark:text-gray-400 mb-4">
+    <div className="mb-4 sm:mb-6">
+      <h2 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">Upload Excel File</h2>
+      <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-3 sm:mb-4">
         Your Excel file should have column headers in MARC format (e.g., "100$a", "245$b")
       </p>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
         <div>
-          <label htmlFor="skipRows" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="skipRows" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Skip Rows
           </label>
           <Input id="skipRows" type="number" min="0" value={skipRows} onChange={e => setSkipRows(Math.max(0, parseInt(e.target.value) || 0))} placeholder="Number of rows to skip" className="w-full" />
         </div>
         <div>
-          <label htmlFor="outputFormat" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="outputFormat" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Output Format
           </label>
           <Select value={outputFormat} onValueChange={(value: 'txt' | 'mrk') => setOutputFormat(value)}>
@@ -120,11 +120,11 @@ const FileUploadSection = ({ onFileProcessed, fileName, navigate, toast }: FileU
       
       <FileUploadZone onFileUpload={processFile} isDragging={isDragging} setIsDragging={setIsDragging} fileName={fileName} />
       
-      <div className="mt-4 flex justify-between items-center">
+      <div className="mt-3 sm:mt-4 flex flex-wrap justify-between items-center">
         <Button
           variant="outline"
           onClick={openTemplateDialog}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 text-sm w-full sm:w-auto mb-2 sm:mb-0"
         >
           <FileSpreadsheet className="h-4 w-4" />
           Download Template

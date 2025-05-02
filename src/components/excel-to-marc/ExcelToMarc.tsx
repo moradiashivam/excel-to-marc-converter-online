@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from 'react-router-dom';
@@ -77,21 +76,21 @@ const ExcelToMarc = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 p-4 md:p-8">
+    <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 px-2 sm:px-4 md:p-6 lg:p-8">
       <div className="max-w-5xl mx-auto">
         {/* Main Header */}
-        <div className="text-center mb-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg p-6">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 dark:from-blue-400 dark:via-purple-300 dark:to-indigo-300">
+        <div className="text-center mb-4 sm:mb-6 md:mb-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg p-3 sm:p-4 md:p-6">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 dark:from-blue-400 dark:via-purple-300 dark:to-indigo-300">
             Excel to MARC Converter Online
           </h1>
-          <div className="h-1 w-48 mx-auto mt-3 bg-gradient-to-r from-blue-500/70 via-purple-500/70 to-indigo-500/70 dark:from-blue-400/70 dark:via-purple-400/70 dark:to-indigo-400/70 rounded-full"></div>
+          <div className="h-1 w-36 sm:w-48 mx-auto mt-2 sm:mt-3 bg-gradient-to-r from-blue-500/70 via-purple-500/70 to-indigo-500/70 dark:from-blue-400/70 dark:via-purple-400/70 dark:to-indigo-400/70 rounded-full"></div>
         </div>
 
-        {/* Original Title with Icon */}
-        <h2 className="text-3xl md:text-4xl font-bold mb-8 text-blue-700 dark:text-blue-300">
+        {/* Convert Your Data Title */}
+        <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 md:mb-8 text-blue-700 dark:text-blue-300">
           <span className="inline-flex items-center">
             <svg 
-              className="w-8 h-8 mr-3 text-blue-600 dark:text-blue-400 transition-transform hover:rotate-12" 
+              className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 mr-2 md:mr-3 text-blue-600 dark:text-blue-400 transition-transform hover:rotate-12" 
               xmlns="http://www.w3.org/2000/svg" 
               width="24" 
               height="24" 
@@ -110,13 +109,13 @@ const ExcelToMarc = () => {
             </svg>
             <span className="relative">
               Convert Your Data
-              <span className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-blue-500/50 via-purple-500/50 to-indigo-500/50 dark:from-blue-400/50 dark:via-purple-400/50 dark:to-indigo-400/50 rounded-full"></span>
+              <span className="absolute -bottom-1 sm:-bottom-2 left-0 w-full h-1 bg-gradient-to-r from-blue-500/50 via-purple-500/50 to-indigo-500/50 dark:from-blue-400/50 dark:via-purple-400/50 dark:to-indigo-400/50 rounded-full"></span>
             </span>
           </span>
         </h2>
       </div>
       
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 md:p-8 mb-8">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3 sm:p-4 md:p-6 lg:p-8 mb-6 sm:mb-8">
         <FileUploadSection 
           onFileProcessed={handleProcessedFile}
           fileName={fileName}
