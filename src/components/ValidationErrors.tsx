@@ -79,7 +79,13 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
       const message = error.message.replace(`Row ${error.row}: `, '');
       const status = readErrors.includes(index) ? "Reviewed" : "Pending Review";
       
-      wsData.push([error.row, errorType, message, status]);
+      // Convert all values to strings to fix the type error
+      wsData.push([
+        String(error.row),  // Convert number to string
+        errorType,
+        message,
+        status
+      ]);
     });
 
     // Create worksheet
