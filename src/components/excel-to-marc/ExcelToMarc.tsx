@@ -79,10 +79,19 @@ const ExcelToMarc = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 dark:from-blue-400 dark:via-purple-300 dark:to-indigo-300">
+        {/* Main Header */}
+        <div className="text-center mb-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg p-6">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 dark:from-blue-400 dark:via-purple-300 dark:to-indigo-300">
+            Excel to MARC Converter Online
+          </h1>
+          <div className="h-1 w-48 mx-auto mt-3 bg-gradient-to-r from-blue-500/70 via-purple-500/70 to-indigo-500/70 dark:from-blue-400/70 dark:via-purple-400/70 dark:to-indigo-400/70 rounded-full"></div>
+        </div>
+
+        {/* Original Title with Icon */}
+        <h2 className="text-3xl md:text-4xl font-bold mb-8 text-blue-700 dark:text-blue-300">
           <span className="inline-flex items-center">
             <svg 
-              className="w-10 h-10 mr-3 text-blue-600 dark:text-blue-400 transition-transform hover:rotate-12" 
+              className="w-8 h-8 mr-3 text-blue-600 dark:text-blue-400 transition-transform hover:rotate-12" 
               xmlns="http://www.w3.org/2000/svg" 
               width="24" 
               height="24" 
@@ -100,11 +109,11 @@ const ExcelToMarc = () => {
               <path d="M8 9h1"></path>
             </svg>
             <span className="relative">
-              Excel to MARC Converter
+              Convert Your Data
               <span className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-blue-500/50 via-purple-500/50 to-indigo-500/50 dark:from-blue-400/50 dark:via-purple-400/50 dark:to-indigo-400/50 rounded-full"></span>
             </span>
           </span>
-        </h1>
+        </h2>
       </div>
       
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 md:p-8 mb-8">
