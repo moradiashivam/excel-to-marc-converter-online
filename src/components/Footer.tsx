@@ -31,14 +31,14 @@ const Footer = () => {
                 <Linkedin className="h-5 w-5" />
               </a>
               <a 
-                href="mailto:your-email@example.com" 
+                href="mailto:moradiashivam@gmail.com" 
                 className="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
                 aria-label="Email"
               >
                 <Mail className="h-5 w-5" />
               </a>
               <a 
-                href="https://github.com/yourusername" 
+                href="https://github.com/moradiashivam" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
@@ -66,7 +66,7 @@ const Footer = () => {
             
             <div className="pt-2">
               <a 
-                href="mailto:mentor-email@example.com" 
+                href="mailto:meghnavyas08@gmail.com" 
                 className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
                 aria-label="Email Mentor"
               >
