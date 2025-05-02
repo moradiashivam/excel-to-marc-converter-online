@@ -27,13 +27,13 @@ const MarcPreview = ({ marcOutput, onDownload, hasErrors, outputFormat = 'txt' }
         {hasErrors ? (
           <div className="flex items-center">
             <AlertCircle className="w-4 h-4 mr-2 text-red-500" />
-            <span className="text-sm text-red-500 mr-4">Fix errors to enable download</span>
+            <span className="text-sm text-red-500 mr-4">Fix errors or mark as reviewed to enable download</span>
             <Button
-              className="bg-gray-400 hover:bg-gray-500 text-white cursor-not-allowed opacity-70"
-              disabled={true}
+              className="bg-amber-500 hover:bg-amber-600 text-white"
+              onClick={() => onDownload(outputFormat)}
             >
               <Download className="w-4 h-4 mr-2" />
-              Download
+              Download Anyway
             </Button>
           </div>
         ) : (

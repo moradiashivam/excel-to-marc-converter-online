@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { FileX, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { FileX, Info, ChevronDown, ChevronUp, Check, Download } from 'lucide-react';
 import { ValidationError } from '@/utils/marcValidation';
 
 interface ValidationErrorsProps {
@@ -11,6 +11,7 @@ interface ValidationErrorsProps {
 
 const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
   const [showAllErrors, setShowAllErrors] = useState(false);
+  const [readErrors, setReadErrors] = useState<number[]>([]);
 
   if (!errors.length) return null;
 
@@ -30,12 +31,62 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
   const errorTypes = Object.keys(errorsByType);
   const displayedErrors = showAllErrors ? errors : errors.slice(0, 5);
   const hasMoreErrors = errors.length > 5;
+  
+  const toggleReadStatus = (errorId: number) => {
+    setReadErrors(prevReadErrors => {
+      if (prevReadErrors.includes(errorId)) {
+        return prevReadErrors.filter(id => id !== errorId);
+      } else {
+        return [...prevReadErrors, errorId];
+      }
+    });
+  };
+  
+  const markAllAsRead = () => {
+    setReadErrors(errors.map((_, index) => index));
+  };
+  
+  const downloadErrorList = () => {
+    const errorLines = errors.map((error, index) => {
+      const status = readErrors.includes(index) ? "[REVIEWED]" : "[PENDING]";
+      return `${status} Row ${error.row}: ${error.message.replace(`Row ${error.row}: `, '')}`;
+    });
+    
+    const errorText = errorLines.join('\n');
+    const blob = new Blob([errorText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'marc_validation_errors.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <Alert variant="destructive" className="mb-6">
       <FileX className="h-5 w-5" />
-      <AlertTitle className="text-lg mb-2">
-        {errors.length === 1 ? '1 Validation Error' : `${errors.length} Validation Errors`}
+      <AlertTitle className="text-lg mb-2 flex justify-between items-center">
+        <span>{errors.length === 1 ? '1 Validation Error' : `${errors.length} Validation Errors`}</span>
+        <div className="flex gap-2">
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="h-8 text-xs flex items-center gap-1"
+            onClick={markAllAsRead}
+          >
+            <Check className="w-4 h-4" /> Mark All as Read
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="h-8 text-xs flex items-center gap-1"
+            onClick={downloadErrorList}
+          >
+            <Download className="w-4 h-4" /> Download Errors
+          </Button>
+        </div>
       </AlertTitle>
       <AlertDescription>
         <p className="text-sm mb-3">Please fix the following issues before proceeding:</p>
@@ -48,11 +99,30 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
                   <Info className="h-4 w-4 mr-1" /> {type} ({errorsByType[type].length})
                 </h4>
                 <ul className="list-disc list-inside text-sm space-y-1">
-                  {(showAllErrors ? errorsByType[type] : errorsByType[type].slice(0, 3)).map((error, index) => (
-                    <li key={`${type}-${index}`} className="text-sm">
-                      <span className="font-medium">Row {error.row}:</span> {error.message.replace(`Row ${error.row}: `, '')}
-                    </li>
-                  ))}
+                  {(showAllErrors ? errorsByType[type] : errorsByType[type].slice(0, 3)).map((error, index) => {
+                    const errorId = errors.findIndex(e => e === error);
+                    const isRead = readErrors.includes(errorId);
+                    return (
+                      <li 
+                        key={`${type}-${index}`} 
+                        className={`text-sm flex items-start gap-2 ${isRead ? 'opacity-60' : ''}`}
+                      >
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-5 w-5 p-0 -ml-1 mt-0.5"
+                          onClick={() => toggleReadStatus(errorId)}
+                        >
+                          <div className={`h-4 w-4 rounded-sm border ${isRead ? 'bg-gray-400 border-gray-400' : 'border-red-500'} flex items-center justify-center`}>
+                            {isRead && <Check className="h-3 w-3 text-white" />}
+                          </div>
+                        </Button>
+                        <span>
+                          <span className="font-medium">Row {error.row}:</span> {error.message.replace(`Row ${error.row}: `, '')}
+                        </span>
+                      </li>
+                    );
+                  })}
                   {!showAllErrors && errorsByType[type].length > 3 && (
                     <li className="italic text-sm">
                       + {errorsByType[type].length - 3} more {type.toLowerCase()}...
@@ -64,11 +134,29 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
           </div>
         ) : (
           <ul className="list-disc list-inside space-y-1">
-            {displayedErrors.map((error, index) => (
-              <li key={index} className="text-sm">
-                <span className="font-medium">Row {error.row}:</span> {error.message.replace(`Row ${error.row}: `, '')}
-              </li>
-            ))}
+            {displayedErrors.map((error, index) => {
+              const isRead = readErrors.includes(index);
+              return (
+                <li 
+                  key={index}
+                  className={`text-sm flex items-start gap-2 ${isRead ? 'opacity-60' : ''}`}
+                >
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-5 w-5 p-0 -ml-1 mt-0.5"
+                    onClick={() => toggleReadStatus(index)}
+                  >
+                    <div className={`h-4 w-4 rounded-sm border ${isRead ? 'bg-gray-400 border-gray-400' : 'border-red-500'} flex items-center justify-center`}>
+                      {isRead && <Check className="h-3 w-3 text-white" />}
+                    </div>
+                  </Button>
+                  <span>
+                    <span className="font-medium">Row {error.row}:</span> {error.message.replace(`Row ${error.row}: `, '')}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         )}
         
