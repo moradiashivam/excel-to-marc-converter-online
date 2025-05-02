@@ -79,7 +79,18 @@ const ExcelToMarc = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-blue-900 dark:text-blue-100 mb-6">Excel to MARC Converter</h1>
+        <h1 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-500 to-indigo-400 dark:from-blue-400 dark:via-purple-300 dark:to-indigo-200 animate-pulse">
+          <span className="inline-flex items-center">
+            <svg className="w-8 h-8 mr-2 text-blue-500 dark:text-blue-300" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <path d="M8 13h8"></path>
+              <path d="M8 17h8"></path>
+              <path d="M8 9h1"></path>
+            </svg>
+            Excel to MARC Converter
+          </span>
+        </h1>
         
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 md:p-8 mb-8">
           <FileUploadSection 
