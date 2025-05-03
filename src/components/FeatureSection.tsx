@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { File, FileText, Upload, Download, ArrowDown, Settings } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
