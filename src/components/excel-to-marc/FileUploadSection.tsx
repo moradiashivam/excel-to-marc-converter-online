@@ -15,9 +15,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import FileUploadZone from '@/components/FileUploadZone';
 import { validateData, type ValidationError, type MarcData } from '@/utils/marcValidation';
 import { convertToMarc } from '@/utils/marcConverter';
+import { findDuplicateRecords, mergeDuplicateRecords } from '@/utils/duplicateHandler';
 
 interface FileUploadSectionProps {
   onFileProcessed: (marcOutput: string, errors: ValidationError[], fileName: string, format: 'txt' | 'mrk') => void;
@@ -31,6 +40,11 @@ const FileUploadSection = ({ onFileProcessed, fileName, navigate, toast }: FileU
   const [skipRows, setSkipRows] = useState<number>(0);
   const [outputFormat, setOutputFormat] = useState<'txt' | 'mrk'>('txt');
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [duplicateData, setDuplicateData] = useState<{
+    jsonData: MarcData[];
+    duplicates: Array<{firstIndex: number, secondIndex: number}>;
+  } | null>(null);
 
   const processFile = async (file: File) => {
     try {
@@ -50,15 +64,19 @@ const FileUploadSection = ({ onFileProcessed, fileName, navigate, toast }: FileU
         });
         return;
       }
+
+      // Check for duplicates based on 020$a and 250$a
+      const duplicates = findDuplicateRecords(jsonData);
       
-      const validationErrors = validateData(jsonData);
-      
-      if (validationErrors.length === 0) {
-        const marcText = convertToMarc(jsonData);
-        onFileProcessed(marcText, validationErrors, file.name, outputFormat);
-      } else {
-        onFileProcessed('', validationErrors, file.name, outputFormat);
+      if (duplicates.length > 0) {
+        // Store data and show duplicate dialog
+        setDuplicateData({ jsonData, duplicates });
+        setShowDuplicateDialog(true);
+        return;
       }
+      
+      // If no duplicates, proceed with normal validation and processing
+      completeFileProcessing(jsonData, file.name);
     } catch (error) {
       toast({
         title: "Error processing file",
@@ -67,6 +85,41 @@ const FileUploadSection = ({ onFileProcessed, fileName, navigate, toast }: FileU
       });
       console.error("File processing error:", error);
     }
+  };
+
+  const completeFileProcessing = (jsonData: MarcData[], originalFileName: string) => {
+    const validationErrors = validateData(jsonData);
+    
+    if (validationErrors.length === 0) {
+      const marcText = convertToMarc(jsonData);
+      onFileProcessed(marcText, validationErrors, originalFileName, outputFormat);
+    } else {
+      onFileProcessed('', validationErrors, originalFileName, outputFormat);
+    }
+  };
+
+  const handleMergeDuplicates = () => {
+    if (!duplicateData) return;
+    
+    // Merge the duplicates
+    const mergedData = mergeDuplicateRecords(duplicateData.jsonData, duplicateData.duplicates);
+    
+    // Close dialog and process the merged data
+    setShowDuplicateDialog(false);
+    completeFileProcessing(mergedData, fileName || "merged_data.xlsx");
+    
+    toast({
+      title: "Duplicates merged",
+      description: `${duplicateData.duplicates.length} duplicate records were merged successfully`
+    });
+  };
+
+  const handleSkipMerge = () => {
+    if (!duplicateData) return;
+    
+    // Skip merging and process the original data
+    setShowDuplicateDialog(false);
+    completeFileProcessing(duplicateData.jsonData, fileName || "data.xlsx");
   };
 
   const openTemplateDialog = () => {
@@ -131,6 +184,7 @@ const FileUploadSection = ({ onFileProcessed, fileName, navigate, toast }: FileU
         </Button>
       </div>
 
+      {/* Template Dialog */}
       <AlertDialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -145,6 +199,34 @@ const FileUploadSection = ({ onFileProcessed, fileName, navigate, toast }: FileU
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Duplicate Records Dialog */}
+      <Dialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Duplicate Records Found</DialogTitle>
+            <DialogDescription>
+              {duplicateData?.duplicates.length} duplicate records were found based on matching 020$a (ISBN) and 250$a (Edition) fields.
+              Do you want to merge these records?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="text-xs sm:text-sm bg-gray-50 dark:bg-gray-800 p-3 rounded-md border border-gray-200 dark:border-gray-700 my-2">
+            <p className="text-gray-600 dark:text-gray-400 mb-1">During merging:</p>
+            <ul className="list-disc pl-5 text-gray-600 dark:text-gray-400">
+              <li>Records with the same ISBN and Edition will be combined</li>
+              <li>The 952 tag data (location codes) will be preserved from all duplicate records</li>
+            </ul>
+          </div>
+          <DialogFooter className="sm:justify-start">
+            <Button variant="secondary" onClick={handleSkipMerge}>
+              Skip Merging
+            </Button>
+            <Button variant="default" onClick={handleMergeDuplicates} className="ml-2">
+              Merge Records
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
