@@ -65,7 +65,7 @@ const FileUploadSection = ({ onFileProcessed, fileName, navigate, toast }: FileU
         return;
       }
 
-      // Check for duplicates based on 020$a and 250$a
+      // Check for duplicates based on 020$a and 245$a
       const duplicates = findDuplicateRecords(jsonData);
       
       if (duplicates.length > 0) {
@@ -206,14 +206,14 @@ const FileUploadSection = ({ onFileProcessed, fileName, navigate, toast }: FileU
           <DialogHeader>
             <DialogTitle>Duplicate Records Found</DialogTitle>
             <DialogDescription>
-              {duplicateData?.duplicates.length} duplicate records were found based on matching 020$a (ISBN) and 250$a (Edition) fields.
+              {duplicateData?.duplicates.length} duplicate records were found based on matching 020$a (ISBN) and 245$a (Title) fields.
               Do you want to merge these records?
             </DialogDescription>
           </DialogHeader>
           <div className="text-xs sm:text-sm bg-gray-50 dark:bg-gray-800 p-3 rounded-md border border-gray-200 dark:border-gray-700 my-2">
             <p className="text-gray-600 dark:text-gray-400 mb-1">During merging:</p>
             <ul className="list-disc pl-5 text-gray-600 dark:text-gray-400">
-              <li>Records with the same ISBN and Edition will be combined</li>
+              <li>Records with the same ISBN and Title will be combined</li>
               <li>The 952 tag data (location codes) will be preserved from all duplicate records</li>
             </ul>
           </div>
