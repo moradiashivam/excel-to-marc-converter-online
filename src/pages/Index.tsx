@@ -1,5 +1,6 @@
 
 import ExcelToMarc from '@/components/excel-to-marc/ExcelToMarc';
+import FeatureSection from '@/components/FeatureSection';
 import Footer from '@/components/Footer';
 import ThemeToggle from '@/components/ThemeToggle';
 
@@ -8,6 +9,7 @@ const Index = () => {
     <>
       <ThemeToggle />
       <ExcelToMarc />
+      <FeatureSection />
       <Footer />
     </>
   );
