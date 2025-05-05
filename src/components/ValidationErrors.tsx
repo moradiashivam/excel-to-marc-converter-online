@@ -50,7 +50,8 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
   const downloadErrorList = () => {
     const errorLines = errors.map((error, index) => {
       const status = readErrors.includes(index) ? "[REVIEWED]" : "[PENDING]";
-      return `${status} Row ${error.row}: ${error.message.replace(`Row ${error.row}: `, '')}`;
+      const cellRef = error.column ? `${error.column}${error.row}` : `Row ${error.row}`;
+      return `${status} Cell ${cellRef}: ${error.message.replace(`Row ${error.row}: `, '')}`;
     });
     
     const errorText = errorLines.join('\n');
@@ -68,7 +69,7 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
   const downloadErrorsAsExcel = () => {
     // Create worksheet data
     const wsData = [
-      ['Row', 'Error Type', 'Error Message', 'Status']
+      ['Cell', 'Error Type', 'Error Message', 'Status']
     ];
 
     errors.forEach((error, index) => {
@@ -78,10 +79,11 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
                         
       const message = error.message.replace(`Row ${error.row}: `, '');
       const status = readErrors.includes(index) ? "Reviewed" : "Pending Review";
+      const cellRef = error.column ? `${error.column}${error.row}` : `Row ${error.row}`;
       
       // Convert all values to strings to fix the type error
       wsData.push([
-        String(error.row),  // Convert number to string
+        cellRef,  // Cell reference instead of just row
         errorType,
         message,
         status
@@ -93,7 +95,7 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
     
     // Set column widths
     const wscols = [
-      { wch: 8 },   // Row column
+      { wch: 8 },   // Cell column
       { wch: 20 },  // Error type column
       { wch: 60 },  // Error message column
       { wch: 15 }   // Status column
@@ -123,6 +125,10 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const formatCellReference = (error: ValidationError) => {
+    return error.column ? `${error.column}${error.row}` : `Row ${error.row}`;
   };
 
   return (
@@ -171,6 +177,7 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
                   {(showAllErrors ? errorsByType[type] : errorsByType[type].slice(0, 3)).map((error, index) => {
                     const errorId = errors.findIndex(e => e === error);
                     const isRead = readErrors.includes(errorId);
+                    const cellRef = formatCellReference(error);
                     return (
                       <li 
                         key={`${type}-${index}`} 
@@ -187,7 +194,7 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
                           </div>
                         </Button>
                         <span>
-                          <span className="font-medium">Row {error.row}:</span> {error.message.replace(`Row ${error.row}: `, '')}
+                          <span className="font-medium">Cell {cellRef}:</span> {error.message.replace(`Row ${error.row}: `, '')}
                         </span>
                       </li>
                     );
@@ -205,6 +212,7 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
           <ul className="list-disc list-inside space-y-1">
             {displayedErrors.map((error, index) => {
               const isRead = readErrors.includes(index);
+              const cellRef = formatCellReference(error);
               return (
                 <li 
                   key={index}
@@ -221,7 +229,7 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
                     </div>
                   </Button>
                   <span>
-                    <span className="font-medium">Row {error.row}:</span> {error.message.replace(`Row ${error.row}: `, '')}
+                    <span className="font-medium">Cell {cellRef}:</span> {error.message.replace(`Row ${error.row}: `, '')}
                   </span>
                 </li>
               );
