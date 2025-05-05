@@ -5,6 +5,7 @@ export interface ValidationError {
   row: number;
   column?: string;
   message: string;
+  actualRow?: number; // Added to track actual row
 }
 
 export interface MarcData {
@@ -36,11 +37,16 @@ export const validateData = (data: MarcData[]): ValidationError[] => {
   
   if (headerErrors.length === 0) {
     data.forEach((row, rowIndex) => {
+      // We need to account for header row and 0-indexing
+      const displayRowNumber = rowIndex + 1; // For displaying in messages
+      const actualRowNumber = rowIndex + 1 + 1; // Actual Excel row (+1 for header, +1 for 0-indexing)
+      
       REQUIRED_FIELDS.forEach(field => {
         if (!row[field]) {
           const columnIndex = headers.indexOf(field);
           validationErrors.push({
-            row: rowIndex + 1,
+            row: displayRowNumber,
+            actualRow: actualRowNumber,
             column: getColumnLabel(columnIndex),
             message: `Missing required field: ${field}`
           });
@@ -52,7 +58,8 @@ export const validateData = (data: MarcData[]): ValidationError[] => {
         // Skip character validation for 245$a field (title) to allow non-English characters
         if (field !== '245$a' && typeof value === 'string' && INVALID_CHARS.some(char => value.includes(char))) {
           validationErrors.push({
-            row: rowIndex + 1,
+            row: displayRowNumber,
+            actualRow: actualRowNumber,
             column: getColumnLabel(fieldIndex),
             message: `Invalid character in ${field}: ${INVALID_CHARS.join(', ')} are not allowed`
           });

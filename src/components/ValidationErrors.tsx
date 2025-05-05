@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -62,7 +61,7 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
   const downloadErrorList = () => {
     const errorLines = errors.map((error, index) => {
       const status = readErrors.includes(index) ? "[REVIEWED]" : "[PENDING]";
-      const cellRef = error.column ? `${error.column}${error.row}` : `Row ${error.row}`;
+      const cellRef = formatCellReference(error);
       return `${status} Cell ${cellRef}: ${error.message.replace(`Row ${error.row}: `, '')}`;
     });
     
@@ -91,7 +90,7 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
                         
       const message = error.message.replace(`Row ${error.row}: `, '');
       const status = readErrors.includes(index) ? "Reviewed" : "Pending Review";
-      const cellRef = error.column ? `${error.column}${error.row}` : `Row ${error.row}`;
+      const cellRef = formatCellReference(error);
       const correction = getSuggestedCorrection(error);
       
       // Convert all values to strings to fix the type error
@@ -174,7 +173,9 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
   };
 
   const formatCellReference = (error: ValidationError) => {
-    return error.column ? `${error.column}${error.row}` : `Row ${error.row}`;
+    // Use actualRow if available, otherwise fall back to row
+    const rowToUse = error.actualRow !== undefined ? error.actualRow : error.row;
+    return error.column ? `${error.column}${rowToUse}` : `Row ${rowToUse}`;
   };
 
   return (
@@ -360,4 +361,3 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
 };
 
 export default ValidationErrors;
-
