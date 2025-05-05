@@ -49,7 +49,8 @@ export const validateData = (data: MarcData[]): ValidationError[] => {
       
       Object.entries(row).forEach(([field, value], columnIndex) => {
         const fieldIndex = headers.indexOf(field);
-        if (typeof value === 'string' && INVALID_CHARS.some(char => value.includes(char))) {
+        // Skip character validation for 245$a field (title) to allow non-English characters
+        if (field !== '245$a' && typeof value === 'string' && INVALID_CHARS.some(char => value.includes(char))) {
           validationErrors.push({
             row: rowIndex + 1,
             column: getColumnLabel(fieldIndex),
