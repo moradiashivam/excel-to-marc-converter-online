@@ -2,7 +2,7 @@
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/540f389c-d449-4bec-8d0a-a1269dc68dd2
+**URL**: [https://excel-to-marc-convetor-online.netlify.app/](https://excel-to-marc-convetor-online.netlify.app/)
 
 ## How can I edit this code?
 
@@ -10,7 +10,7 @@ There are several ways of editing your application.
 
 **Use Lovable**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/540f389c-d449-4bec-8d0a-a1269dc68dd2) and start prompting.
+Simply visit the [https://excel-to-marc-convetor-online.netlify.app/](https://excel-to-marc-convetor-online.netlify.app/) and start prompting.
 
 Changes made via Lovable will be committed automatically to this repo.
 
