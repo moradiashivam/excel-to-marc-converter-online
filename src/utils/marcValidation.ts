@@ -5,7 +5,7 @@ export interface ValidationError {
   row: number;
   column?: string;
   message: string;
-  actualRow?: number; // Added to track actual row
+  actualRow?: number; // Added to track actual row including skip rows
 }
 
 export interface MarcData {
@@ -28,7 +28,7 @@ export const validateHeaders = (headers: string[]): ValidationError[] => {
   return errors;
 };
 
-export const validateData = (data: MarcData[]): ValidationError[] => {
+export const validateData = (data: MarcData[], skipRows: number = 0): ValidationError[] => {
   const validationErrors: ValidationError[] = [];
   
   const headers = Object.keys(data[0] || {});
@@ -37,9 +37,9 @@ export const validateData = (data: MarcData[]): ValidationError[] => {
   
   if (headerErrors.length === 0) {
     data.forEach((row, rowIndex) => {
-      // We need to account for header row and 0-indexing
+      // We need to account for header row, 0-indexing, and skipped rows
       const displayRowNumber = rowIndex + 1; // For displaying in messages
-      const actualRowNumber = rowIndex + 1 + 1; // Actual Excel row (+1 for header, +1 for 0-indexing)
+      const actualRowNumber = rowIndex + 1 + 1 + skipRows; // Actual Excel row (+1 for header, +1 for 0-indexing, +skipRows for skipped rows)
       
       REQUIRED_FIELDS.forEach(field => {
         if (!row[field]) {

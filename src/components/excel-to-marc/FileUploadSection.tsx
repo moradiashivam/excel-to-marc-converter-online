@@ -88,7 +88,8 @@ const FileUploadSection = ({ onFileProcessed, fileName, navigate, toast }: FileU
   };
 
   const completeFileProcessing = (jsonData: MarcData[], originalFileName: string) => {
-    const validationErrors = validateData(jsonData);
+    // Pass skipRows to the validation function
+    const validationErrors = validateData(jsonData, skipRows);
     
     if (validationErrors.length === 0) {
       const marcText = convertToMarc(jsonData);
