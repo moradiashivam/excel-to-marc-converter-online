@@ -2,9 +2,10 @@
 import React, { useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { FileX, Info, ChevronDown, ChevronUp, Check, Download, FileSpreadsheet } from 'lucide-react';
+import { FileX, Info, ChevronDown, ChevronUp, Check, Download, FileSpreadsheet, Edit } from 'lucide-react';
 import { ValidationError } from '@/utils/marcValidation';
 import { write, utils } from 'xlsx';
+import { Textarea } from '@/components/ui/textarea';
 
 interface ValidationErrorsProps {
   errors: ValidationError[];
@@ -13,7 +14,8 @@ interface ValidationErrorsProps {
 const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
   const [showAllErrors, setShowAllErrors] = useState(false);
   const [readErrors, setReadErrors] = useState<number[]>([]);
-
+  const [correctionsVisible, setCorrectionsVisible] = useState<number[]>([]);
+  
   if (!errors.length) return null;
 
   // Group errors by type for better organization
@@ -47,6 +49,16 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
     setReadErrors(errors.map((_, index) => index));
   };
   
+  const toggleCorrection = (errorId: number) => {
+    setCorrectionsVisible(prev => {
+      if (prev.includes(errorId)) {
+        return prev.filter(id => id !== errorId);
+      } else {
+        return [...prev, errorId];
+      }
+    });
+  };
+  
   const downloadErrorList = () => {
     const errorLines = errors.map((error, index) => {
       const status = readErrors.includes(index) ? "[REVIEWED]" : "[PENDING]";
@@ -69,7 +81,7 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
   const downloadErrorsAsExcel = () => {
     // Create worksheet data
     const wsData = [
-      ['Cell', 'Error Type', 'Error Message', 'Status']
+      ['Cell', 'Error Type', 'Error Message', 'Status', 'Suggested Correction']
     ];
 
     errors.forEach((error, index) => {
@@ -80,13 +92,15 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
       const message = error.message.replace(`Row ${error.row}: `, '');
       const status = readErrors.includes(index) ? "Reviewed" : "Pending Review";
       const cellRef = error.column ? `${error.column}${error.row}` : `Row ${error.row}`;
+      const correction = getSuggestedCorrection(error);
       
       // Convert all values to strings to fix the type error
       wsData.push([
         cellRef,  // Cell reference instead of just row
         errorType,
         message,
-        status
+        status,
+        correction
       ]);
     });
 
@@ -98,7 +112,8 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
       { wch: 8 },   // Cell column
       { wch: 20 },  // Error type column
       { wch: 60 },  // Error message column
-      { wch: 15 }   // Status column
+      { wch: 15 },  // Status column
+      { wch: 60 }   // Correction column
     ];
     ws['!cols'] = wscols;
     
@@ -120,11 +135,42 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'marc_validation_errors.xlsx';
+    a.download = 'marc_validation_errors_with_corrections.xlsx';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const getSuggestedCorrection = (error: ValidationError): string => {
+    if (error.message.includes('Missing required field')) {
+      const fieldMatch = error.message.match(/Missing required field: (\S+)/);
+      if (fieldMatch && fieldMatch[1]) {
+        const field = fieldMatch[1];
+        if (field === '245$a') return 'Add a title in the 245$a column';
+        if (field === '100$a') return 'Add an author name in the 100$a column';
+        if (field === '020$a') return 'Add an ISBN in the 020$a column';
+        return `Add required data in the ${field} column`;
+      }
+    } else if (error.message.includes('Invalid MARC tag format')) {
+      const tagMatch = error.message.match(/Invalid MARC tag format in header: "([^"]+)"/);
+      if (tagMatch && tagMatch[1]) {
+        const invalidTag = tagMatch[1];
+        // Extract numbers if they exist in the invalid tag
+        const numbers = invalidTag.match(/\d+/);
+        const suggestedTag = numbers ? `${numbers[0]}$a` : '245$a';
+        return `Replace "${invalidTag}" with a valid MARC tag format like "${suggestedTag}"`;
+      }
+      return 'Use format XXX$y where XXX is a 3-digit number and y is a lowercase letter (e.g., 245$a)';
+    } else if (error.message.includes('Invalid character')) {
+      const charMatch = error.message.match(/Invalid character in (\S+): ([^a-zA-Z0-9\s]+)/);
+      if (charMatch && charMatch[2]) {
+        const invalidChars = charMatch[2];
+        // Start with the original string, then replace all invalid chars with empty string
+        return `Remove these characters: ${invalidChars}`;
+      }
+    }
+    return 'No specific correction available. Review data format requirements.';
   };
 
   const formatCellReference = (error: ValidationError) => {
@@ -164,7 +210,7 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
         </div>
       </AlertTitle>
       <AlertDescription>
-        <p className="text-sm mb-3">Please fix the following issues before proceeding:</p>
+        <p className="text-sm mb-3">Please fix the following issues before proceeding. Click on 'Show Correction' to see suggested fixes:</p>
         
         {errorTypes.length > 1 ? (
           <div className="space-y-3">
@@ -177,25 +223,49 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
                   {(showAllErrors ? errorsByType[type] : errorsByType[type].slice(0, 3)).map((error, index) => {
                     const errorId = errors.findIndex(e => e === error);
                     const isRead = readErrors.includes(errorId);
+                    const isCorrectionVisible = correctionsVisible.includes(errorId);
                     const cellRef = formatCellReference(error);
                     return (
                       <li 
                         key={`${type}-${index}`} 
-                        className={`text-sm flex items-start gap-2 ${isRead ? 'opacity-60' : ''}`}
+                        className={`text-sm ${isRead ? 'opacity-60' : ''}`}
                       >
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-5 w-5 p-0 -ml-1 mt-0.5"
-                          onClick={() => toggleReadStatus(errorId)}
-                        >
-                          <div className={`h-4 w-4 rounded-sm border ${isRead ? 'bg-gray-400 border-gray-400' : 'border-red-500'} flex items-center justify-center`}>
-                            {isRead && <Check className="h-3 w-3 text-white" />}
+                        <div className="flex items-start gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-5 w-5 p-0 -ml-1 mt-0.5"
+                            onClick={() => toggleReadStatus(errorId)}
+                          >
+                            <div className={`h-4 w-4 rounded-sm border ${isRead ? 'bg-gray-400 border-gray-400' : 'border-red-500'} flex items-center justify-center`}>
+                              {isRead && <Check className="h-3 w-3 text-white" />}
+                            </div>
+                          </Button>
+                          <div className="flex-1">
+                            <span>
+                              <span className="font-medium">Cell {cellRef}:</span> {error.message.replace(`Row ${error.row}: `, '')}
+                            </span>
+                            <div className="flex items-center mt-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 text-xs px-2 py-0 flex items-center gap-1"
+                                onClick={() => toggleCorrection(errorId)}
+                              >
+                                <Edit className="h-3 w-3" /> 
+                                {isCorrectionVisible ? 'Hide Correction' : 'Show Correction'}
+                              </Button>
+                            </div>
+                            {isCorrectionVisible && (
+                              <div className="ml-6 mt-2 border-l-2 border-green-500 pl-2">
+                                <p className="text-xs font-medium text-green-700 dark:text-green-400 mb-1">Suggested correction:</p>
+                                <div className="bg-white dark:bg-gray-800 rounded border border-green-200 dark:border-green-900 p-2 mb-2">
+                                  <p className="text-xs">{getSuggestedCorrection(error)}</p>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        </Button>
-                        <span>
-                          <span className="font-medium">Cell {cellRef}:</span> {error.message.replace(`Row ${error.row}: `, '')}
-                        </span>
+                        </div>
                       </li>
                     );
                   })}
@@ -212,25 +282,49 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
           <ul className="list-disc list-inside space-y-1">
             {displayedErrors.map((error, index) => {
               const isRead = readErrors.includes(index);
+              const isCorrectionVisible = correctionsVisible.includes(index);
               const cellRef = formatCellReference(error);
               return (
                 <li 
                   key={index}
-                  className={`text-sm flex items-start gap-2 ${isRead ? 'opacity-60' : ''}`}
+                  className={`text-sm ${isRead ? 'opacity-60' : ''}`}
                 >
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-5 w-5 p-0 -ml-1 mt-0.5"
-                    onClick={() => toggleReadStatus(index)}
-                  >
-                    <div className={`h-4 w-4 rounded-sm border ${isRead ? 'bg-gray-400 border-gray-400' : 'border-red-500'} flex items-center justify-center`}>
-                      {isRead && <Check className="h-3 w-3 text-white" />}
+                  <div className="flex items-start gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-5 w-5 p-0 -ml-1 mt-0.5"
+                      onClick={() => toggleReadStatus(index)}
+                    >
+                      <div className={`h-4 w-4 rounded-sm border ${isRead ? 'bg-gray-400 border-gray-400' : 'border-red-500'} flex items-center justify-center`}>
+                        {isRead && <Check className="h-3 w-3 text-white" />}
+                      </div>
+                    </Button>
+                    <div className="flex-1">
+                      <span>
+                        <span className="font-medium">Cell {cellRef}:</span> {error.message.replace(`Row ${error.row}: `, '')}
+                      </span>
+                      <div className="flex items-center mt-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-6 text-xs px-2 py-0 flex items-center gap-1"
+                          onClick={() => toggleCorrection(index)}
+                        >
+                          <Edit className="h-3 w-3" /> 
+                          {isCorrectionVisible ? 'Hide Correction' : 'Show Correction'}
+                        </Button>
+                      </div>
+                      {isCorrectionVisible && (
+                        <div className="ml-6 mt-2 border-l-2 border-green-500 pl-2">
+                          <p className="text-xs font-medium text-green-700 dark:text-green-400 mb-1">Suggested correction:</p>
+                          <div className="bg-white dark:bg-gray-800 rounded border border-green-200 dark:border-green-900 p-2 mb-2">
+                            <p className="text-xs">{getSuggestedCorrection(error)}</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </Button>
-                  <span>
-                    <span className="font-medium">Cell {cellRef}:</span> {error.message.replace(`Row ${error.row}: `, '')}
-                  </span>
+                  </div>
                 </li>
               );
             })}
@@ -266,3 +360,4 @@ const ValidationErrors = ({ errors }: ValidationErrorsProps) => {
 };
 
 export default ValidationErrors;
+
