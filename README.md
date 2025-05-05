@@ -4,16 +4,6 @@
 
 **URL**: [https://excel-to-marc-convetor-online.netlify.app/](https://excel-to-marc-convetor-online.netlify.app/)
 
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [https://excel-to-marc-convetor-online.netlify.app/](https://excel-to-marc-convetor-online.netlify.app/) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
 **Use your preferred IDE**
 
 If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
