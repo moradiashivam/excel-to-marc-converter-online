@@ -1,82 +1,52 @@
-import React, { useCallback } from 'react';
-import * as XLSX from 'xlsx';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { validateData } from '@/utils/marcValidation';
-import { convertToMarc } from '@/utils/marcConverter';
-import { findDuplicateRecords, mergeDuplicateRecords } from '@/utils/duplicateHandler';
 
-interface FileUploadSectionProps {
-  onFileProcessed: (output: string, errors: any[], fileName: string, format: 'txt' | 'mrk') => void;
-  fileName: string;
-  navigate: any;
-  toast: any;
-}
+import React from 'react';
 
-const FileUploadSection: React.FC<FileUploadSectionProps> = ({ 
-  onFileProcessed, 
-  fileName,
-  navigate,
-  toast
-}) => {
-  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data, { type: 'array', codepage: 65001 }); // UTF-8 codepage
-
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
-      
-      // Convert to JSON with UTF-8 handling
-      const jsonData = XLSX.utils.sheet_to_json<Record<string, string>>(worksheet, {
-        raw: false, // Get formatted strings
-        defval: '', // Default empty string for empty cells
-        dateNF: 'yyyy-mm-dd', // Date format
-        blankrows: false // Skip blank rows
-      });
-
-      // Process data
-      const validationErrors = validateData(jsonData);
-      const marcData = convertToMarc(jsonData);
-      
-      onFileProcessed(
-        marcData,
-        validationErrors,
-        file.name,
-        'mrk'
-      );
-    } catch (error) {
-      toast({
-        title: "File processing error",
-        description: "Failed to process the Excel file. Please ensure it's a valid Excel file with UTF-8 encoding.",
-        variant: "destructive"
-      });
-      console.error('Error processing file:', error);
-    }
-  }, [onFileProcessed, toast]);
-
+const Footer = () => {
   return (
-    <div className="space-y-4">
-      <div className="grid w-full max-w-sm items-center gap-1.5">
-        <Label htmlFor="excel-upload">Upload Excel File</Label>
-        <Input 
-          id="excel-upload" 
-          type="file" 
-          accept=".xlsx,.xls,.csv"
-          onChange={handleFileUpload}
-        />
-      </div>
-      {fileName && (
-        <div className="text-sm text-gray-600 dark:text-gray-400">
-          Current file: {fileName}
+    <footer className="bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8 mt-12 border-t border-blue-200 dark:border-gray-700">
+      <div className="max-w-5xl mx-auto px-4 text-center">
+        <div className="mb-6">
+          <h3 className="text-xl font-bold text-blue-700 dark:text-blue-300 mb-1">
+            Developed by
+          </h3>
+          <p className="text-lg font-medium text-gray-800 dark:text-gray-200">
+            Shivam Moradia
+          </p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            College Librarian
+          </p>
+          <p className="text-base font-medium text-gray-700 dark:text-gray-300">
+            St. Xavier's College (Autonomous) Ahmedabad
+          </p>
         </div>
-      )}
-    </div>
+        
+        <div className="mt-8">
+          <h3 className="text-xl font-bold text-blue-700 dark:text-blue-300 mb-1">
+            Under the guidance of
+          </h3>
+          <p className="text-lg font-medium text-gray-800 dark:text-gray-200">
+            Project Mentor
+          </p>
+          <p className="text-lg font-medium text-gray-800 dark:text-gray-200">
+            Dr. Meghna Vyas
+          </p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+            Associate Professor
+          </p>
+          <p className="text-base font-medium text-gray-700 dark:text-gray-300">
+            PG Department of Library and Information Science
+          </p>
+          <p className="text-base font-medium text-gray-700 dark:text-gray-300">
+            Sardar Patel University, Vallabh Vidyanagar
+          </p>
+        </div>
+        
+        <div className="mt-8 pt-6 border-t border-blue-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">
+          <p>© {new Date().getFullYear()} Excel to MARC Converter. All Rights Reserved.</p>
+        </div>
+      </div>
+    </footer>
   );
 };
 
-export default FileUploadSection;
+export default Footer;
