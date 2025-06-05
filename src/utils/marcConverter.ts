@@ -1,4 +1,3 @@
-
 import { MarcData } from './marcValidation';
 import { MARC_LEADER } from './marcConstants';
 
@@ -40,18 +39,14 @@ export const convertToMarc = (data: MarcData[]) => {
           
           // Set proper indicators for specific tags
           if (tag === '100') indicators = '\\\\';
-          else if (tag === '245') indicators = '10';
+          else if (tag === '245') indicators = '\\0';
           else if (tag === '700') indicators = '1\\';
           
           tags[tag] = { indicators, subfields: [], count: 0 };
         }
         
-        // For repeated tags like 700, increment the first indicator
-        if (tag === '700') {
-          tags[tag].count++;
-          const firstIndicator = tags[tag].count.toString();
-          tags[tag].indicators = `${firstIndicator}\\`;
-        }
+        // For 700 tags, keep the same indicators for all occurrences
+        // Remove the incrementing logic
         
         tags[tag].subfields.push(`$${subfield}${value}`);
       }
