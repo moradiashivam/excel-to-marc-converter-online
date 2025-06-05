@@ -28,7 +28,7 @@ export const convertToMarc = (data: MarcData[]) => {
     lines.push(`=LDR  ${MARC_LEADER}`);
     lines.push(`=008  ${generateMarc008()}`);
     
-    const tags: { [key: string]: { indicators: string, subfields: string[] } } = {};
+    const tags: { [key: string]: { indicators: string, subfields: string[], count: number } } = {};
     
     Object.entries(row).forEach(([header, value]) => {
       if (!value) return;
@@ -40,10 +40,19 @@ export const convertToMarc = (data: MarcData[]) => {
           
           // Set proper indicators for specific tags
           if (tag === '100') indicators = '\\\\';
-          else if (tag === '245') indicators = '\\0';
+          else if (tag === '245') indicators = '10';
+          else if (tag === '700') indicators = '1\\';
           
-          tags[tag] = { indicators, subfields: [] };
+          tags[tag] = { indicators, subfields: [], count: 0 };
         }
+        
+        // For repeated tags like 700, increment the first indicator
+        if (tag === '700') {
+          tags[tag].count++;
+          const firstIndicator = tags[tag].count.toString();
+          tags[tag].indicators = `${firstIndicator}\\`;
+        }
+        
         tags[tag].subfields.push(`$${subfield}${value}`);
       }
     });
