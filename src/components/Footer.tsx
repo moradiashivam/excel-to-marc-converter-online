@@ -18,6 +18,9 @@ const Footer = () => {
           <p className="text-base font-medium text-gray-700 dark:text-gray-300">
             St. Xavier's College (Autonomous) Ahmedabad
           </p>
+           <p className="text-base font-medium text-gray-700 dark:text-gray-300">
+            moradiashivam@gmail.com
+          </p>
         </div>
         
         <div className="mt-8">
